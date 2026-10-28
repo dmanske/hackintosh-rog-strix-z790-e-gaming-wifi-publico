@@ -186,6 +186,28 @@ Funcionou na sua? Abra uma *issue* com placa, BIOS e resultado.
 - **Por que o OpenCore de debug não mostra o erro?** Ele acontece no kernel do macOS, depois que o OpenCore já saiu.
   Use `-v` e filme.
 
+## Créditos e a outra solução (CorpNewt)
+
+O mesmo diagnóstico já tinha sido feito em **novembro de 2024** pelo **CorpNewt** (autor do SSDTTime), na issue
+[corpnewt/SSDTTime#73](https://github.com/corpnewt/SSDTTime/issues/73), para a mesma placa na BIOS 2703. Chegamos
+nele de forma independente (só achamos a issue depois) — fica aqui o crédito.
+
+A correção dele ataca o outro lado: em vez de mudar o `AWAK` de lugar, ela transforma em `Noop` o `If (LPEN == Zero)`
+que esconde o `Device (RP25)`, para o `RP25` existir desde o carregamento. Um patch só (`TableSignature` livre):
+
+| Comment | Count | Find | Replace |
+|---|---|---|---|
+| \_SB.PC00.RP25 NoOp to force-enable | 0 | `43A02F934C50454E00` | `43A3A3A3A3A3A3A3A3` |
+
+| | Este repositório (`RP25.AWAK` → `LPCB`) | CorpNewt (`Noop` no `If`) |
+|---|---|---|
+| Patches | 2 | 1 |
+| O que muda | só o endereço do `AWAK` (e a chamada no `_WAK`) | o `RP25` passa a ser criado sempre, mesmo se `LPEN ≠ 0` |
+| Na BIOS 1801 | não casa, nada muda | casa (o `If` também existe lá) |
+| Na 3202 da Z790-E | casa (1 e 2) | casa (1) |
+
+As duas funcionam; use **uma** delas, não as duas juntas.
+
 ## Licença
 
 MIT. Sem garantia: faça backup da EFI. Os nomes ASUS/Intel/Apple pertencem aos seus donos.

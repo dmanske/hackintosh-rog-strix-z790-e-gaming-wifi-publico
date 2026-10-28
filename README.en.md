@@ -185,6 +185,28 @@ BIOS and result.
 - **Why doesn't OpenCore DEBUG show the error?** It happens in the macOS kernel, after OpenCore has exited. Use `-v`
   and record the screen.
 
+## Credits and the other fix (CorpNewt)
+
+The same diagnosis had already been made in **November 2024** by **CorpNewt** (author of SSDTTime) in
+[corpnewt/SSDTTime#73](https://github.com/corpnewt/SSDTTime/issues/73), for the same board on BIOS 2703. We reached it
+independently (and only found the issue afterwards) — full credit to him.
+
+His fix attacks the other side: instead of moving `AWAK`, it turns the `If (LPEN == Zero)` that hides `Device (RP25)`
+into `Noop`s, so `RP25` exists at load time. A single patch (no table filter):
+
+| Comment | Count | Find | Replace |
+|---|---|---|---|
+| \_SB.PC00.RP25 NoOp to force-enable | 0 | `43A02F934C50454E00` | `43A3A3A3A3A3A3A3A3` |
+
+| | This repository (`RP25.AWAK` → `LPCB`) | CorpNewt (`Noop` the `If`) |
+|---|---|---|
+| Patches | 2 | 1 |
+| What changes | only where `AWAK` lives (and the `_WAK` call) | `RP25` is always created, even if `LPEN ≠ 0` |
+| On BIOS 1801 | no match, nothing changes | matches (the `If` exists there too) |
+| On Z790-E 3202 | matches (1 and 2) | matches (1) |
+
+Both work; use **one** of them, not both.
+
 ## License
 
 MIT. No warranty: back up your EFI. ASUS/Intel/Apple names belong to their owners.
