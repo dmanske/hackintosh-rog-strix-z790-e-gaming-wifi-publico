@@ -188,28 +188,6 @@ placas ASUS con el mismo código de USB4 (ASMedia ASM4242) pueden estar afectada
 - **¿Por qué OpenCore DEBUG no muestra el error?** Ocurre en el kernel de macOS, cuando OpenCore ya terminó. Usa `-v` y
   graba la pantalla.
 
-## Créditos y la otra solución (CorpNewt)
-
-El mismo diagnóstico ya lo había hecho en **noviembre de 2024** **CorpNewt** (autor de SSDTTime) en
-[corpnewt/SSDTTime#73](https://github.com/corpnewt/SSDTTime/issues/73), para la misma placa con la BIOS 2703. Llegamos a
-él de forma independiente (encontramos la issue después) — el crédito es suyo.
-
-Su corrección ataca el otro lado: en lugar de mover `AWAK`, convierte en `Noop` el `If (LPEN == Zero)` que esconde el
-`Device (RP25)`, para que `RP25` exista desde la carga. Un solo parche (sin filtro de tabla):
-
-| Comment | Count | Find | Replace |
-|---|---|---|---|
-| \_SB.PC00.RP25 NoOp to force-enable | 0 | `43A02F934C50454E00` | `43A3A3A3A3A3A3A3A3` |
-
-| | Este repositorio (`RP25.AWAK` → `LPCB`) | CorpNewt (`Noop` en el `If`) |
-|---|---|---|
-| Parches | 2 | 1 |
-| Qué cambia | solo dónde vive `AWAK` (y la llamada en `_WAK`) | `RP25` se crea siempre, aunque `LPEN ≠ 0` |
-| En la BIOS 1801 | no coincide, nada cambia | coincide (el `If` también existe ahí) |
-| En la 3202 de la Z790-E | coincide (1 y 2) | coincide (1) |
-
-Las dos funcionan; usa **una**, no las dos juntas.
-
 ## Licencia
 
 MIT. Sin garantía: haz copia de seguridad de tu EFI. Los nombres ASUS/Intel/Apple pertenecen a sus dueños.
